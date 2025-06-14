@@ -1,0 +1,26 @@
+# Prometheus configuration for ArbitrageX
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # ArbitrageX bot metrics
+  - job_name: 'arbitragex'
+    static_configs:
+      - targets: ['arbitragex:8000']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node exporter (system metrics)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']

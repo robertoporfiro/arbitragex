@@ -1,0 +1,295 @@
+# ArbitrageX - Cryptocurrency Arbitrage Trading Bot
+# .gitignore
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+log/
+*.log.*
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/
+database/data/
+
+# Redis dumps
+dump.rdb
+
+# Trading data
+trades/
+backtest_results/
+historical_data/
+market_data/
+
+# API Keys and Secrets
+api_keys.json
+secrets.json
+credentials.json
+config/secrets/
+.secrets/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Node.js (if using any JS tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Monitoring data
+prometheus/data/
+grafana/data/
+
+# Development files
+.dev/
+*.dev
+dev_*
+test_*
+debug_*
+
+# Local configuration overrides
+local_config.py
+local_settings.py
+
+# Performance profiling
+*.prof
+*.profile
+
+# Memory dumps
+*.hprof
+*.dump
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.cert
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Package files
+*.deb
+*.rpm
+*.pkg
+*.dmg
+
+# Documentation build
+docs/_build/
+docs/build/
+
+# Jupyter
+.jupyter/
+
+# PyCharm
+.idea/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Local development
+local/
+.local/
+
+# Trading bot specific
+paper_trading_results/
+live_trading_results/
+exchange_data/
+price_history/
+arbitrage_opportunities/
+
+# Configuration backups
+config_backup/
+settings_backup/
+
+# Error logs
+error.log
+debug.log
+trading.log
+arbitrage.log
+
+# Performance logs
+performance.log
+latency.log
+
+# Exchange API responses (for debugging)
+api_responses/
+exchange_logs/
+
+# Temporary trading data
+temp_trades/
+temp_data/
+
+# Local scripts
+run_local.py
+test_local.py
+debug_local.py
+
+# Ignore any file ending with .local
+*.local
+
+# Ignore any directory ending with _local
+*_local/
