@@ -50,7 +50,7 @@ logs:
 paper-trading:
 	@echo "📝 Starting Paper Trading with REAL market data..."
 	@echo "🌐 Connecting to live exchanges (Binance, Coinbase, Kraken)..."
-	docker-compose exec arbitragex python src/main.py --mode paper --duration 60
+	docker-compose exec arbitragex python src/main.py --mode paper --duration 10
 
 paper-trading-custom:
 	@read -p "Enter duration in minutes: " duration; \

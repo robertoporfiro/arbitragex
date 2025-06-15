@@ -120,30 +120,20 @@ make shell          # Access bot shell
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+> **Note:** As variáveis de ambiente agora são definidas diretamente no bloco `environment:` do `docker-compose.yml`. O arquivo `.env` não é mais utilizado nem necessário para configuração do bot.
 
-```bash
-# Trading Configuration
-INITIAL_BALANCE=10000
-MIN_PROFIT_PERCENT=0.3
-MAX_TRADE_AMOUNT=1000
-TRADING_SYMBOLS=BTC/USDT,ETH/USDT,ADA/USDT,SOL/USDT
+Exemplo de configuração no `docker-compose.yml`:
 
-# System Configuration
-ENVIRONMENT=development
-LOG_LEVEL=INFO
-
-# Database Configuration
-POSTGRES_USER=arbitrage_user
-POSTGRES_PASSWORD=arbitrage_pass
-POSTGRES_HOST=postgres
-POSTGRES_PORT=5432
-POSTGRES_DB=arbitrage_db
-
-# Redis Configuration
-REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_DB=0
+```yaml
+services:
+  arbitragex:
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      - INITIAL_BALANCE=1000
+      - MIN_PROFIT_PERCENT=0.05
+      - MAX_TRADE_AMOUNT=100
+      - TRADING_SYMBOLS=SOL/USDT,XRP/USDT,SHIB/USDT
 ```
 
 ### Trading Parameters

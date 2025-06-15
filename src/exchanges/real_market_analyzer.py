@@ -353,4 +353,4 @@ class RealMarketAnalyzer:
                           f"{opp['buy_exchange'].upper()} → {opp['sell_exchange'].upper()} "
                           f"({opp['profit_percent']:.3f}%, ${opp['profit_usd']:.2f})")
         
-        logger.info("📊"*50)
+        logger.info("📊"*10)

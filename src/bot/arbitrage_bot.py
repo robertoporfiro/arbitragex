@@ -184,7 +184,10 @@ class ArbitrageBot:
         trades_executed = 0
         opportunities_found = 0
 
-        while asyncio.get_event_loop().time() < end_time:
+        while True:
+            now = asyncio.get_event_loop().time()
+            if now >= end_time:
+                break
             try:
                 # Buscar oportunidades
                 opportunities = await self.find_arbitrage_opportunities()
