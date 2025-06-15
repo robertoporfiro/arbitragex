@@ -1,6 +1,7 @@
 services:
   # ArbitrageX Bot Principal
   arbitragex:
+    image: arbitragex-bot:v2.3
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,10 +10,10 @@ services:
     environment:
       - ENVIRONMENT=development
       - LOG_LEVEL=INFO
-      - INITIAL_BALANCE=10000
-      - MIN_PROFIT_PERCENT=0.3
-      - MAX_TRADE_AMOUNT=1000
-      - TRADING_SYMBOLS=BTC/USDT,ETH/USDT,ADA/USDT,SOL/USDT
+      - INITIAL_BALANCE=1000
+      - MIN_PROFIT_PERCENT=0.05
+      - MAX_TRADE_AMOUNT=100
+      - TRADING_SYMBOLS=SOL/USDT,XRP/USDT,SHIB/USDT
     volumes:
       - ./logs:/app/logs
       - ./.env:/app/.env

@@ -10,23 +10,23 @@ import structlog
 
 def setup_logging(level: str = "INFO"):
     """Configurar sistema de logging"""
-    
+
     # Criar diretório de logs
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
-    
+
     # Configurar nível
     log_level = getattr(logging, level.upper(), logging.INFO)
-    
+
     # Configurar formatação
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     # Handler para console
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
-    
+
     # Handler para arquivo
     file_handler = RotatingFileHandler(
         log_dir / "arbitragex.log",
@@ -34,13 +34,16 @@ def setup_logging(level: str = "INFO"):
         backupCount=5
     )
     file_handler.setFormatter(formatter)
-    
+
     # Configurar root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(log_level)
-    root_logger.addHandler(console_handler)
-    root_logger.addHandler(file_handler)
-    
+    # Evita handlers duplicados
+    if not any(isinstance(h, logging.StreamHandler) for h in root_logger.handlers):
+        root_logger.addHandler(console_handler)
+    if not any(isinstance(h, RotatingFileHandler) for h in root_logger.handlers):
+        root_logger.addHandler(file_handler)
+
     # Configurar structlog
     structlog.configure(
         processors=[
@@ -59,3 +62,19 @@ def setup_logging(level: str = "INFO"):
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
+
+def setup_logger(name: str, level: str = "INFO"):
+    """
+    ✅ FUNÇÃO ADICIONADA: setup_logger
+    Configurar logger para um módulo específico
+    """
+    # Configurar logging geral se ainda não foi feito
+    setup_logging(level)
+    
+    # Retornar logger específico para o módulo
+    logger = logging.getLogger(name)
+    logger.propagate = True
+    return logger
+
+# Alias para compatibilidade
+get_logger = setup_logger
