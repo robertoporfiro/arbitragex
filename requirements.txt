@@ -1,0 +1,54 @@
+# ArbitrageX - Cryptocurrency Arbitrage Trading Bot
+# Core dependencies for real market analysis
+aiohttp>=3.9.0
+aiofiles>=23.2.0
+
+# Data processing
+pandas>=2.1.0
+numpy>=1.25.0
+
+# Database
+asyncpg>=0.29.0
+sqlalchemy>=2.0.0
+
+# Redis
+redis>=5.0.0
+
+# Configuration
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+
+# Logging
+structlog>=23.2.0
+colorlog>=6.8.0
+
+# Monitoring (ESSENCIAL!)
+prometheus_client>=0.19.0
+
+# HTTP requests
+httpx>=0.25.0
+requests>=2.31.0
+
+# Crypto/Exchange libraries
+ccxt>=4.1.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Development
+black>=23.11.0
+
+# Utilities
+click>=8.1.0
+rich>=13.7.0
+
+# Date/Time
+python-dateutil>=2.8.0
+pytz>=2023.3
+
+# Security
+cryptography>=41.0.0
+
+# Async support
+asyncio
