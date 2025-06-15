@@ -7,6 +7,7 @@ from prometheus_client import start_http_server
 
 from exchanges.real_market_analyzer import RealMarketAnalyzer
 from utils.logger import setup_logger
+from src.monitoring.metrics import MetricsCollector
 
 class ArbitrageBot:
     def __init__(self, config, db_manager=None, metrics=None):
@@ -70,7 +71,7 @@ class ArbitrageBot:
 
                 # Log detalhado: preço por exchange
                 for ex, price in prices.items():
-                    self.logger.info(f"   📈 {symbol} @ {ex}: Bid=${price.bid:.4f} Ask=${price.ask:.4f} Vol24h={price.volume_24h:.2f} Spread={price.spread_percent:.3f}%")
+                    self.logger.info(f"   📈 {symbol} @ {ex}: Bid=${price.bid:.8f} Ask=${price.ask:.8f} Vol24h={price.volume_24h:.2f} Spread={price.spread_percent:.3f}%")
 
                 price_dict = {ex: price.ask for ex, price in prices.items()}
 
@@ -84,6 +85,7 @@ class ArbitrageBot:
                     price_diff_percent = ((highest_price - lowest_price) / lowest_price) * 100
 
                     if price_diff_percent >= self.min_profit_percent:
+                        trade_volume = 1  # Simulação: 1 unidade
                         opportunity = {
                             'symbol': symbol,
                             'buy_exchange': lowest_exchange,
@@ -91,6 +93,8 @@ class ArbitrageBot:
                             'buy_price': lowest_price,
                             'sell_price': highest_price,
                             'profit_percent': price_diff_percent,
+                            'profit_usd': (highest_price - lowest_price) * trade_volume,
+                            'volume': trade_volume,
                             'timestamp': datetime.now()
                         }
                         opportunities.append(opportunity)
@@ -115,7 +119,7 @@ class ArbitrageBot:
 
     async def simulate_action(self, opportunity: Dict):
         """Simula a execução de uma ação de arbitragem ao identificar uma oportunidade"""
-        self.logger.info(f"🟢 Simulando ação: Comprando {opportunity['symbol']} em {opportunity['buy_exchange']} por ${opportunity['buy_price']:.2f} e vendendo em {opportunity['sell_exchange']} por ${opportunity['sell_price']:.2f}")
+        self.logger.info(f"🟢 Simulando ação: Comprando {opportunity['symbol']} em {opportunity['buy_exchange']} por ${opportunity['buy_price']:.8f} e vendendo em {opportunity['sell_exchange']} por ${opportunity['sell_price']:.8f}")
         # Simular latência
         await asyncio.sleep(0.2)
         # Simular resultado
@@ -160,8 +164,8 @@ class ArbitrageBot:
             self.metrics.trade_duration.observe(duration)
 
             self.logger.info(f"✅ Trade executado com sucesso!")
-            self.logger.info(f"   💵 Lucro: ${profit:.2f}")
-            self.logger.info(f"   💰 Balance atual: ${self.balance:.2f}")
+            self.logger.info(f"   💵 Lucro: ${profit:.8f}")
+            self.logger.info(f"   💰 Balance atual: ${self.balance:.8f}")
 
             return True
 
@@ -185,6 +189,10 @@ class ArbitrageBot:
                 # Buscar oportunidades
                 opportunities = await self.find_arbitrage_opportunities()
                 opportunities_found += len(opportunities)
+
+                # Log detalhado de mercado (snapshot + análise)
+                market_data = await self.market_analyzer.get_market_snapshot()
+                self.market_analyzer.log_market_analysis(market_data, opportunities)
 
                 # Executar trades para oportunidades válidas
                 for opportunity in opportunities:

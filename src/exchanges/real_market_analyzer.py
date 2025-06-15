@@ -10,6 +10,11 @@ from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 import json
+from .ccxt_adapter import CCXTExchangeAdapter, CCXTPrice
+from src.utils.logger import setup_logging
+
+# Garantir setup do logger no início do módulo
+setup_logging("INFO")
 
 logger = logging.getLogger(__name__)
 
@@ -37,40 +42,18 @@ class RealMarketAnalyzer:
         self.session = None
         self.price_cache = {}
         self.last_update = {}
-        
-        # URLs das APIs públicas (sem necessidade de chaves)
-        self.api_endpoints = {
-            'binance': {
-                'ticker': 'https://api.binance.com/api/v3/ticker/24hr',
-                'orderbook': 'https://api.binance.com/api/v3/depth',
-                'symbols_map': {
-                    'BTC/USDT': 'BTCUSDT',
-                    'ETH/USDT': 'ETHUSDT',
-                    'ADA/USDT': 'ADAUSDT',
-                    'SOL/USDT': 'SOLUSDT'
-                }
-            },
-            'coinbase': {
-                'ticker': 'https://api.exchange.coinbase.com/products/{}/ticker',
-                'orderbook': 'https://api.exchange.coinbase.com/products/{}/book',
-                'symbols_map': {
-                    'BTC/USDT': 'BTC-USD',
-                    'ETH/USDT': 'ETH-USD',
-                    'ADA/USDT': 'ADA-USD',
-                    'SOL/USDT': 'SOL-USD'
-                }
-            },
-            'kraken': {
-                'ticker': 'https://api.kraken.com/0/public/Ticker',
-                'orderbook': 'https://api.kraken.com/0/public/Depth',
-                'symbols_map': {
-                    'BTC/USDT': 'XBTUSD',
-                    'ETH/USDT': 'ETHUSD',
-                    'ADA/USDT': 'ADAUSD',
-                    'SOL/USDT': 'SOLUSD'
-                }
-            }
-        }
+        # Exchanges e símbolos agora são configuráveis
+        self.exchanges = getattr(config, 'exchanges', None) or getattr(config, 'EXCHANGES', None)
+        if not self.exchanges:
+            # fallback: usar exchanges padrão
+            self.exchanges = ['binance', 'coinbasepro', 'kraken']
+        self.trading_symbols = getattr(config, 'trading_symbols', None) or getattr(config, 'TRADING_SYMBOLS', None)
+        if isinstance(self.trading_symbols, str):
+            self.trading_symbols = [s.strip() for s in self.trading_symbols.split(',')]
+        self.ccxt_adapter = CCXTExchangeAdapter(self.exchanges)
+        # Remover symbols_map e endpoints hardcoded (usado só para fallback HTTP)
+        self.api_endpoints = {}
+        self.validate_and_map_symbols()
     
     async def initialize(self):
         """Inicializar conexões HTTP"""
@@ -179,51 +162,96 @@ class RealMarketAnalyzer:
             logger.error(f"❌ Erro ao buscar preço Kraken para {symbol}: {e}")
         return None
     
+    def validate_and_map_symbols(self):
+        """Valida e ajusta os símbolos configurados para cada exchange usando CCXT."""
+        import logging
+        logger = logging.getLogger(__name__)
+        from collections import defaultdict
+        import ccxt
+        self.exchange_symbols_map = defaultdict(dict)
+        valid_symbols = set()
+        for ex in self.exchanges:
+            try:
+                ccxt_ex = getattr(ccxt, ex)()
+                ccxt_ex.load_markets()
+                available = set(ccxt_ex.symbols)
+                for symbol in self.trading_symbols:
+                    # Busca case-insensitive e variantes (ex: USDT/USD)
+                    if symbol in available:
+                        self.exchange_symbols_map[ex][symbol] = symbol
+                        valid_symbols.add(symbol)
+                    else:
+                        # Tenta variantes comuns
+                        base, quote = symbol.split('/')
+                        candidates = [
+                            f"{base.upper()}/{quote.upper()}",
+                            f"{base}/{quote}",
+                            f"{base}-{quote}",
+                            f"{base}{quote}",
+                            f"{base}/{quote.replace('USDT','USD')}",
+                            f"{base}/{quote.replace('USD','USDT')}"
+                        ]
+                        found = False
+                        for c in candidates:
+                            if c in available:
+                                self.exchange_symbols_map[ex][symbol] = c
+                                valid_symbols.add(symbol)
+                                found = True
+                                logger.info(f"[CCXT] Mapeado {symbol} -> {c} em {ex}")
+                                break
+                        if not found:
+                            logger.warning(f"[CCXT] Par '{symbol}' não suportado em '{ex}'. Exemplos: {list(available)[:5]}")
+            except Exception as e:
+                logger.warning(f"[CCXT] Erro ao validar pares para {ex}: {e}")
+        # Atualiza lista de símbolos válidos
+        self.trading_symbols = list(valid_symbols)
+
+    def fetch_ccxt_price(self, exchange: str, symbol: str):
+        """Buscar preço usando CCXT, validando se o par existe na exchange"""
+        # Use o símbolo mapeado se existir
+        mapped_symbol = self.exchange_symbols_map.get(exchange, {}).get(symbol, symbol)
+        price = self.ccxt_adapter.fetch_price(exchange, mapped_symbol)
+        if price:
+            return RealTimePrice(
+                symbol=price.symbol,
+                exchange=price.exchange,
+                bid=price.bid,
+                ask=price.ask,
+                volume_24h=price.volume_24h,
+                timestamp=price.timestamp,
+                spread_percent=price.spread_percent
+            )
+        return None
+
     async def fetch_all_prices(self, symbol: str) -> Dict[str, RealTimePrice]:
-        """Buscar preços de todas as exchanges para um símbolo"""
-        tasks = [
-            self.fetch_binance_price(symbol),
-            self.fetch_coinbase_price(symbol),
-            self.fetch_kraken_price(symbol)
-        ]
-        
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        """Buscar preços de todas as exchanges configuradas para um símbolo (CCXT)"""
         prices = {}
-        
-        for result in results:
-            if isinstance(result, RealTimePrice):
-                prices[result.exchange] = result
-            elif isinstance(result, Exception):
-                logger.warning(f"⚠️  Erro ao buscar preço: {result}")
-        
+        for ex in self.exchanges:
+            price = self.fetch_ccxt_price(ex, symbol)
+            if price:
+                prices[ex] = price
         return prices
-    
+
     async def get_market_snapshot(self) -> Dict[str, Dict[str, RealTimePrice]]:
         """Obter snapshot completo do mercado"""
         logger.info("📊 Coletando dados reais do mercado...")
-        
         market_data = {}
-        
-        for symbol in self.config.trading_symbols:
+        for symbol in self.trading_symbols:
             logger.info(f"🔍 Buscando preços para {symbol}...")
             prices = await self.fetch_all_prices(symbol)
-            
             if prices:
                 market_data[symbol] = prices
                 logger.info(f"✅ {symbol}: {len(prices)} exchanges conectadas")
-                
-                # Log dos preços coletados
+                # Log detalhado por exchange
                 for exchange, price_data in prices.items():
-                    logger.info(f"   📈 {exchange.upper()}: "
-                              f"Bid=${price_data.bid:,.8f} "
-                              f"Ask=${price_data.ask:,.8f} "
-                              f"Spread={price_data.spread_percent:.3f}%")
+                    logger.info(f"   📈 {symbol} @ {exchange}: "
+                                f"Bid=${price_data.bid:,.8f} "
+                                f"Ask=${price_data.ask:,.8f} "
+                                f"Vol24h={price_data.volume_24h:,.2f} "
+                                f"Spread={price_data.spread_percent:.3f}%")
             else:
                 logger.warning(f"⚠️  Nenhum preço obtido para {symbol}")
-            
-            # Pequena pausa entre símbolos para evitar rate limiting
             await asyncio.sleep(0.5)
-        
         return market_data
     
     def find_real_arbitrage_opportunities(self, market_data: Dict[str, Dict[str, RealTimePrice]]) -> List:
@@ -297,9 +325,9 @@ class RealMarketAnalyzer:
     
     def log_market_analysis(self, market_data: Dict[str, Dict[str, RealTimePrice]], opportunities: List):
         """Log da análise de mercado"""
-        logger.info("\n" + "📊"*50)
+        logger.info("\n" + "📊"*10)
         logger.info("🌐 ANÁLISE REAL DO MERCADO")
-        logger.info("📊"*50)
+        logger.info("📊"*10)
         
         total_exchanges = sum(len(prices) for prices in market_data.values())
         logger.info(f"🔗 Conexões ativas: {total_exchanges}")

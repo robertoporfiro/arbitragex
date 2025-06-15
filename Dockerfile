@@ -17,7 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código da aplicação
 COPY src/ ./src/
-COPY config/ ./config/
 COPY .env* ./
 
 # Criar diretório para logs e dados

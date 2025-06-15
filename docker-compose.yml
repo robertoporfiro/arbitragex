@@ -1,7 +1,7 @@
 services:
   # ArbitrageX Bot Principal
   arbitragex:
-    image: arbitragex-bot:v2.3
+    image: arbitragex-bot:v3.4
     build:
       context: .
       dockerfile: Dockerfile

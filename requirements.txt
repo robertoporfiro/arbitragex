@@ -1,6 +1,6 @@
 # ArbitrageX - Cryptocurrency Arbitrage Trading Bot
 # Core dependencies for real market analysis
-aiohttp>=3.9.0
+aiohttp
 aiofiles>=23.2.0
 
 # Data processing
@@ -23,14 +23,14 @@ structlog>=23.2.0
 colorlog>=6.8.0
 
 # Monitoring (ESSENCIAL!)
-prometheus_client>=0.19.0
+prometheus_client
 
 # HTTP requests
 httpx>=0.25.0
 requests>=2.31.0
 
 # Crypto/Exchange libraries
-ccxt>=4.1.0
+ccxt
 
 # Testing
 pytest>=7.4.0
